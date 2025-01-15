@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <memory>
 #include <algorithm>
+#include <set>
 
 // Reimplenting the char_matrix from day 4 bc I think it will be helpful
 class char_matrix {
@@ -59,22 +60,22 @@ class frequency {
 private:
     char label;
     std::shared_ptr<char_matrix> mat;
-    std::vector<std::pair<int, int>> locations;
-    std::vector<std::pair<int, int>> antinodes;
+    std::set<std::pair<int, int>> locations;
+    std::set<std::pair<int, int>> antinodes;
 
 public:
-    frequency(char label, char_matrix mat) {
+    frequency(char label, char_matrix& mat) {
         
         this->mat = std::make_shared<char_matrix>(mat);
         this->label = label;
         for (int i = 0; i < this->mat->get_height(); i++) {
             for (int j = 0; j < this->mat->get_width(); j++) {
                 if (this->mat->get_by_id(i,j) == this->label) {
-                    locations.push_back(std::pair<int, int>(i,j));
+                    locations.insert(std::pair<int, int>(i,j));
                 }
             }
         }
-        this->antinodes = std::vector<std::pair<int, int>>();
+        this->antinodes = std::set<std::pair<int, int>>();
     }
     ~frequency() = default;
 
@@ -84,13 +85,17 @@ public:
                 && antinode.first > 0 && antinode.second > 0);
     }
 
+    int get_antinodes_size() {
+        return this->antinodes.size();
+    }
+
     // The real meat of the class. Calculates the positions of the antinodes 
     void find_antinodes() {
 
         // Looping through all the pairs
-        std::vector<std::pair<int, int>>::iterator first_loc;
+        std::set<std::pair<int, int>>::iterator first_loc;
         for (first_loc = locations.begin(); first_loc != locations.end(); first_loc++) {
-            std::vector<std::pair<int, int>>::iterator second_loc;
+            std::set<std::pair<int, int>>::iterator second_loc;
             for (second_loc = locations.begin(); second_loc != locations.end(); second_loc++) {
                 
                 // Do not want to calculate the pair of a location with itself
@@ -99,17 +104,17 @@ public:
                 }
 
                 // Getting the differences between the locations to calculate antinodes
-                const int first_diff = second_loc->first - first_loc->first;
-                const int second_diff = second_loc->second - first_loc->second;
-                const std::pair<int, int> first_antinode(second_loc->first+first_diff, second_loc->second+second_diff);
-                const std::pair<int, int> second_antinode(first_loc->first-first_diff, first_loc->second-second_diff);
+                int first_diff = second_loc->first - first_loc->first;
+                int second_diff = second_loc->second - first_loc->second;
+                std::pair<int, int> first_antinode(second_loc->first+first_diff, second_loc->second+second_diff);
+                std::pair<int, int> second_antinode(first_loc->first-first_diff, first_loc->second-second_diff);
 
                 // Checking the antinodes are within the grid boundaries
                 if (is_valid_antinode(first_antinode)) {
-                    antinodes.push_back(first_antinode);
+                    antinodes.insert(first_antinode);
                 }
                 if (is_valid_antinode(second_antinode)) {
-                    antinodes.push_back(second_antinode);
+                    antinodes.insert(second_antinode);
                 }
 
             }
@@ -117,20 +122,72 @@ public:
     }
 
     // Checks the antinodes of both frequencies and removes antinodes from this if there are overlaps
-    void compare_antinodes(frequency* freq) {
-        std::vector<std::pair<int, int>>::iterator it;
-        for (it = freq->antinodes.begin(); it != freq->antinodes.end(); it++) {
+    void compare_antinodes(const frequency* freq) {
+        std::set<std::pair<int, int>> new_antinodes;
+        
+        std::set_difference(
+            antinodes.begin(), antinodes.end(), 
+            freq->antinodes.begin(), freq->antinodes.end(), 
+            std::inserter(new_antinodes, new_antinodes.end())
+        );
 
-            // This is a bit hacky but it works
-            antinodes.erase(std::remove_if(antinodes.begin(), antinodes.end(),
-            [&](std::pair<int, int> p){return p == *it;}));
+        if (new_antinodes != antinodes) {
+            antinodes = new_antinodes;
         }
     }
-
 };
 
 int main(int argc, char const *argv[])
 {
-    /* code */
+    std::ifstream file("day8.txt");
+    if (!file.is_open()) {
+        std::cerr << "File failed to open" << std::endl;
+        return -1;
+    }
+
+    std::set<char> seen_chars;
+    char ch;
+    long res = 0;
+
+    // Finding all the unique characters
+    while (file >> ch) {
+        if (!isspace(ch) && ch != '.') {
+            seen_chars.insert(ch);
+        }
+    }
+
+    // Resetting the file's flags and making the character matrix
+    file.clear();
+    file.seekg(0);
+    char_matrix mat(file);
+
+    // Creating the frequencies
+    std::set<char>::iterator set_it;
+    std::vector<frequency> freq_vec;
+    for (set_it = seen_chars.begin(); set_it != seen_chars.end(); set_it++) {
+        frequency freq(*set_it, mat);
+        freq.find_antinodes();
+        freq_vec.push_back(freq);
+    }
+
+    // Finding their antinodes
+    std::vector<frequency>::iterator outer_vec_it;
+    for (outer_vec_it = freq_vec.begin(); outer_vec_it != freq_vec.end(); outer_vec_it++) {
+        std::vector<frequency>::iterator inner_vec_it;
+        
+        // Comparing antinodes to get rid of superfluous ones
+        for (inner_vec_it = freq_vec.begin(); inner_vec_it != freq_vec.end(); inner_vec_it++) {
+            if (outer_vec_it == inner_vec_it) {
+                continue;
+            }
+            outer_vec_it->compare_antinodes(&(*inner_vec_it));
+        }
+        res += outer_vec_it->get_antinodes_size();   
+    }
+
+    std::cout << "Total Number of Antinodes: " << res << std::endl;
+
+    file.close();
+
     return 0;
 }
