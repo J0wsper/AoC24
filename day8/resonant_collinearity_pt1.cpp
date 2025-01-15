@@ -82,11 +82,15 @@ public:
     // Just checks the validity of an antinode
     bool is_valid_antinode(std::pair<int, int> antinode) {
         return (antinode.first < mat->get_height() && antinode.second < mat->get_width()
-                && antinode.first > 0 && antinode.second > 0);
+                && antinode.first >= 0 && antinode.second >= 0);
     }
 
     int get_antinodes_size() {
         return this->antinodes.size();
+    }
+
+    char get_label() {
+        return this->label;
     }
 
     // The real meat of the class. Calculates the positions of the antinodes 
@@ -124,7 +128,7 @@ public:
     // Checks the antinodes of both frequencies and removes antinodes from this if there are overlaps
     void compare_antinodes(const frequency* freq) {
         std::set<std::pair<int, int>> new_antinodes;
-        
+
         std::set_difference(
             antinodes.begin(), antinodes.end(), 
             freq->antinodes.begin(), freq->antinodes.end(), 
@@ -177,7 +181,7 @@ int main(int argc, char const *argv[])
         
         // Comparing antinodes to get rid of superfluous ones
         for (inner_vec_it = freq_vec.begin(); inner_vec_it != freq_vec.end(); inner_vec_it++) {
-            if (outer_vec_it == inner_vec_it) {
+            if (outer_vec_it->get_label() == inner_vec_it->get_label()) {
                 continue;
             }
             outer_vec_it->compare_antinodes(&(*inner_vec_it));
