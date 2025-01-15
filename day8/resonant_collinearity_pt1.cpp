@@ -3,6 +3,7 @@
 #include <vector>
 #include <stdlib.h>
 #include <memory>
+#include <algorithm>
 
 // Reimplenting the char_matrix from day 4 bc I think it will be helpful
 class char_matrix {
@@ -62,13 +63,13 @@ private:
     std::vector<std::pair<int, int>> antinodes;
 
 public:
-    frequency(char label, char_matrix* mat) {
+    frequency(char label, char_matrix mat) {
         
         this->mat = std::make_shared<char_matrix>(mat);
         this->label = label;
-        for (int i = 0; i < mat->get_height(); i++) {
-            for (int j = 0; j < mat->get_width(); j++) {
-                if (mat->get_by_id(i,j) == this->label) {
+        for (int i = 0; i < this->mat->get_height(); i++) {
+            for (int j = 0; j < this->mat->get_width(); j++) {
+                if (this->mat->get_by_id(i,j) == this->label) {
                     locations.push_back(std::pair<int, int>(i,j));
                 }
             }
@@ -112,6 +113,17 @@ public:
                 }
 
             }
+        }
+    }
+
+    // Checks the antinodes of both frequencies and removes antinodes from this if there are overlaps
+    void compare_antinodes(frequency* freq) {
+        std::vector<std::pair<int, int>>::iterator it;
+        for (it = freq->antinodes.begin(); it != freq->antinodes.end(); it++) {
+
+            // This is a bit hacky but it works
+            antinodes.erase(std::remove_if(antinodes.begin(), antinodes.end(),
+            [&](std::pair<int, int> p){return p == *it;}));
         }
     }
 
