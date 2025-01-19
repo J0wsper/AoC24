@@ -12,16 +12,21 @@ private:
     bool is_compacted;
     long checksum;
 
-    // Finds the soonest free block
-    void find_free_space(std::list<int>::iterator& first, std::list<int>::iterator& last) {
-        first = std::find(contents.begin(), contents.end(), -1);
-        last = std::find_if(first, contents.end(), [](int q){return q != -1;});
+    // Wrappers for function calls I use a lot
+    std::list<int>::reverse_iterator find_block_back() {
+        return std::find_if(contents.rbegin(), contents.rend(), [](int p){return p != -1;});
     }
 
-    // Finds the last contiguous block
-    void find_last_block(std::list<int>::reverse_iterator& rfirst, std::list<int>::reverse_iterator& rend) {
-        rfirst = std::find_if(contents.rbegin(), contents.rend(), [](int p){return p != -1;});
-        rend = std::find(rfirst, contents.rend(), -1);
+    std::list<int>::iterator find_free_front() {
+        return std::find(contents.begin(), contents.end(), -1);
+    }
+
+    std::list<int>::iterator find_next_block_front(std::list<int>::iterator curr) {
+        return std::find_if(curr, contents.end(), [](int p){return p != -1;});
+    }
+
+    std::list<int>::reverse_iterator find_next_free_back(std::list<int>::reverse_iterator curr) {
+        return std::find(curr, contents.rend(), -1);
     }
 
 public:
@@ -76,18 +81,25 @@ public:
     ~disk() = default;
 
     // Compacts the disk
+    // TODO: This is still unfinished
     void compact() {
         
-        // TODO: This needs to be finished.
-        std::list<int>::iterator curr = std::find(contents.begin(), contents.end(), -1);
-        std::list<int>::reverse_iterator rcurr = std::find_if(contents.rbegin(), contents.rend(), [](int p){return p != -1;});
-        while (curr != contents.end() && rcurr != contents.rend()) {
-            contents.emplace(curr, *rcurr);
-            contents.erase(curr);
-            curr = std::find(curr, contents.end(), -1);
-            rcurr = std::find_if(rcurr, contents.rend(), [](int p){return p != -1;});
-        }
+        // Finding the soonest block and free space from the back and the front respectively
+        auto block_begin = find_block_back();
+        auto free_begin = find_free_front();
+        auto block_end = find_next_free_back(block_begin);
+        auto free_end = find_next_block_front(free_begin);
 
+        // Finding whichever one is smaller
+        int free_size = std::distance(free_begin, free_end);
+        int block_size = std::distance(block_begin, block_end);
+       
+        // Looping through until we have compacted the whole disk
+        // while (free_end != contents.end() || block_end != contents.rend()) {
+            
+        // }
+
+        // Setting the compacted flag as true
         is_compacted = true;
     }
 
