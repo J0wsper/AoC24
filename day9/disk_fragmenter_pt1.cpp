@@ -87,17 +87,30 @@ public:
         // Finding the soonest block and free space from the back and the front respectively
         auto block_begin = find_block_back();
         auto free_begin = find_free_front();
-        auto block_end = find_next_free_back(block_begin);
         auto free_end = find_next_block_front(free_begin);
 
         // Finding whichever one is smaller
         int free_size = std::distance(free_begin, free_end);
-        int block_size = std::distance(block_begin, block_end);
+        auto block_end = block_begin;
+        std::advance(block_end, free_size);
        
         // Looping through until we have compacted the whole disk
-        // while (free_end != contents.end() || block_end != contents.rend()) {
+        while (free_end != contents.end() && block_end != contents.rend()) {
             
-        // }
+            // Swapping the ranges we found on the previous iteration
+            std::swap_ranges(free_begin, free_end, block_begin);
+            
+            // Finding the appropriate iterator positions for the next swap
+            block_begin = find_block_back();
+            free_begin = find_free_front();
+            free_end = find_next_block_front(free_begin);
+
+            // Finding the length of the free block
+            int free_size = std::distance(free_begin, free_end);
+            block_end = block_begin;
+            std::advance(block_end, free_size);
+
+        }
 
         // Setting the compacted flag as true
         is_compacted = true;
@@ -110,9 +123,10 @@ public:
             return -1;
         }
         long curr = 0;
-        std::list<int>::iterator it;
+        std::list<int>::iterator it = contents.begin();
         for (it = contents.begin(); it != contents.end(); it++) {
             checksum += curr*(*it);
+            curr++;
         }
         return checksum;
     }
