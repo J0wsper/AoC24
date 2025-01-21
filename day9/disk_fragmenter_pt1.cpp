@@ -75,13 +75,11 @@ public:
                 index++;
             }
         }
-
     } 
 
     ~disk() = default;
 
     // Compacts the disk
-    // TODO: This is still unfinished
     void compact() {
         
         // Finding the soonest block and free space from the back and the front respectively
@@ -91,11 +89,9 @@ public:
 
         // Finding whichever one is smaller
         int free_size = std::distance(free_begin, free_end);
-        auto block_end = block_begin;
-        std::advance(block_end, free_size);
        
         // Looping through until we have compacted the whole disk
-        while (free_end != contents.end() && block_end != contents.rend()) {
+        while (free_end != contents.end()) {
             
             // Swapping the ranges we found on the previous iteration
             std::swap_ranges(free_begin, free_end, block_begin);
@@ -107,10 +103,12 @@ public:
 
             // Finding the length of the free block
             int free_size = std::distance(free_begin, free_end);
-            block_end = block_begin;
-            std::advance(block_end, free_size);
 
         }
+
+        // Chopping off the end range of negatives.
+        int new_size = std::distance(contents.begin(), free_begin);
+        contents.resize(new_size);
 
         // Setting the compacted flag as true
         is_compacted = true;
@@ -123,6 +121,9 @@ public:
             return -1;
         }
         long curr = 0;
+        checksum = 0;
+
+        // For some reason it isn't working normally
         std::list<int>::iterator it = contents.begin();
         for (it = contents.begin(); it != contents.end(); it++) {
             checksum += curr*(*it);
@@ -134,11 +135,6 @@ public:
 
 int main(int argc, char const *argv[])
 {
-    // Just some testing code to understand how std::swap_ranges works
-    // std::list<int> arr1 = {3,3,3,-1,-1,-1,4,4,4,4};
-    // std::list<int>::iterator free_space_begin = std::find(arr1.begin(), arr1.end(), -1);
-    // std::list<int>::iterator free_space_end = std::find(arr1.begin(), arr1.end(), 4);
-    // std::swap_ranges(free_space_begin, free_space_end, arr1.rbegin());
 
     std::ifstream file("day9.txt");
     if (!file.is_open()) {
@@ -148,6 +144,9 @@ int main(int argc, char const *argv[])
 
     disk d(file);
     d.compact();
+
+    // Too low: 6379618789437
+    // Too high: 6382875732477
 
     std::cout << "Total Checksum: " << d.calculate_checksum() << std::endl;
 
