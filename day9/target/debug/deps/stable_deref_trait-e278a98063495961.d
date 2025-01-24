@@ -1,0 +1,7 @@
+/home/brams/Documents/School Documents/Code/Advent of Code 2024/day9_aoc_2024/target/debug/deps/libstable_deref_trait-e278a98063495961.rmeta: /home/brams/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stable_deref_trait-1.2.0/src/lib.rs
+
+/home/brams/Documents/School Documents/Code/Advent of Code 2024/day9_aoc_2024/target/debug/deps/libstable_deref_trait-e278a98063495961.rlib: /home/brams/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stable_deref_trait-1.2.0/src/lib.rs
+
+/home/brams/Documents/School Documents/Code/Advent of Code 2024/day9_aoc_2024/target/debug/deps/stable_deref_trait-e278a98063495961.d: /home/brams/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stable_deref_trait-1.2.0/src/lib.rs
+
+/home/brams/.cargo/registry/src/index.crates.io-6f17d22bba15001f/stable_deref_trait-1.2.0/src/lib.rs:
