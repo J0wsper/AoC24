@@ -102,7 +102,7 @@ impl<'a> Disk<'a> {
                 }
             },
             Direction::BACKWARD => {
-                while disk[loc] != FREE_SPACE && loc > 0 {
+                while disk[loc] == disk[start] && loc > 0 {
                     loc -= 1;
                 }
             },
