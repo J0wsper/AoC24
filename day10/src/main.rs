@@ -1,4 +1,4 @@
-use std::{fs,env};
+use std::{collections::HashSet, env, fs};
 
 // Important consts. If the file is changed, update MAP_WIDTH and MAP_HEIGHT 
 // with the number of columns and the number of rows respectively.
@@ -66,22 +66,22 @@ impl TopographicMap {
     }
 
     // Given a trailhead, will return that trail's score
-    fn find_trails(&self, start: (usize, usize)) -> u32 {
+    fn find_trails(&self, start: (usize, usize), peaks: &mut HashSet<(usize, usize)>) -> u32 {
+
+        // Base case
+        if self.char_mat[start.0][start.1] == 9 && peaks.insert(start) {
+            return 1;
+        }
 
         // Finding possible directions
         let directions = self.find_directions(start);
 
-        // Base case
-        if self.char_mat[start.0][start.1] == 9 {
-            return 1;
-        }
-
         // Recursive case depending on which directions are valid
         let mut trail_score = 0;
-        if directions.north {trail_score += self.find_trails((start.0-1, start.1));}
-        if directions.east {trail_score += self.find_trails((start.0, start.1+1));}
-        if directions.south {trail_score += self.find_trails((start.0+1,start.1));}
-        if directions.west {trail_score += self.find_trails((start.0, start.1-1));}
+        if directions.north {trail_score += self.find_trails((start.0-1, start.1), peaks);}
+        if directions.east {trail_score += self.find_trails((start.0, start.1+1), peaks);}
+        if directions.south {trail_score += self.find_trails((start.0+1,start.1), peaks);}
+        if directions.west {trail_score += self.find_trails((start.0, start.1-1), peaks);}
 
         trail_score
     }
@@ -95,7 +95,11 @@ impl TopographicMap {
         for (i, row) in self.char_mat.iter().enumerate() {
             for (j, val) in row.iter().enumerate() {
                 if *val == 0 {
-                    total_trail_score += self.find_trails((i,j));
+
+                    // Peaks is a set for each trailhead to keep track of which peaks
+                    // we have visited so far to prevent overcounting.
+                    let mut peaks: HashSet<(usize, usize)> = HashSet::new();
+                    total_trail_score += self.find_trails((i,j), &mut peaks);
                 }
             }
         }
@@ -112,6 +116,10 @@ fn main() -> std::io::Result<()> {
         .expect("Could not read day10.txt.");
 
     let test: TopographicMap = TopographicMap::new(&data);
+
+    // dbg!(&test);
+
+    // dbg!(&test.char_mat[0][1]);
 
     println!("The total trail score is {}", test.part1());
 
