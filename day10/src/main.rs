@@ -66,7 +66,7 @@ impl TopographicMap {
     }
 
     // Given a trailhead, will return that trail's score
-    fn find_trails(&self, start: (usize, usize), peaks: &mut HashSet<(usize, usize)>) -> u32 {
+    fn find_trails_pt1(&self, start: (usize, usize), peaks: &mut HashSet<(usize, usize)>) -> u32 {
 
         // Base case
         if self.char_mat[start.0][start.1] == 9 && peaks.insert(start) {
@@ -78,10 +78,30 @@ impl TopographicMap {
 
         // Recursive case depending on which directions are valid
         let mut trail_score = 0;
-        if directions.north {trail_score += self.find_trails((start.0-1, start.1), peaks);}
-        if directions.east {trail_score += self.find_trails((start.0, start.1+1), peaks);}
-        if directions.south {trail_score += self.find_trails((start.0+1,start.1), peaks);}
-        if directions.west {trail_score += self.find_trails((start.0, start.1-1), peaks);}
+        if directions.north {trail_score += self.find_trails_pt1((start.0-1, start.1), peaks);}
+        if directions.east {trail_score += self.find_trails_pt1((start.0, start.1+1), peaks);}
+        if directions.south {trail_score += self.find_trails_pt1((start.0+1,start.1), peaks);}
+        if directions.west {trail_score += self.find_trails_pt1((start.0, start.1-1), peaks);}
+
+        trail_score
+    }
+
+    fn find_trails_pt2(&self, start: (usize, usize)) -> u32 {
+
+        // Base case
+        if self.char_mat[start.0][start.1] == 9 {
+            return 1;
+        }
+
+        // Finding possible directions
+        let directions = self.find_directions(start);
+
+        // Recursive case depending on which directions are valid
+        let mut trail_score = 0;
+        if directions.north {trail_score += self.find_trails_pt2((start.0-1, start.1));}
+        if directions.east {trail_score += self.find_trails_pt2((start.0, start.1+1));}
+        if directions.south {trail_score += self.find_trails_pt2((start.0+1,start.1));}
+        if directions.west {trail_score += self.find_trails_pt2((start.0, start.1-1));}
 
         trail_score
     }
@@ -99,13 +119,35 @@ impl TopographicMap {
                     // Peaks is a set for each trailhead to keep track of which peaks
                     // we have visited so far to prevent overcounting.
                     let mut peaks: HashSet<(usize, usize)> = HashSet::new();
-                    total_trail_score += self.find_trails((i,j), &mut peaks);
+                    total_trail_score += self.find_trails_pt1((i,j), &mut peaks);
                 }
             }
         }
 
         total_trail_score
     }
+
+    // You can solve part2 the same exact way I solved part1 but by removing
+    // the HashSet
+    pub fn part2(&self) -> u32 {
+
+        let mut total_trail_rating = 0;
+
+        for (i, row) in self.char_mat.iter().enumerate() {
+            for (j, val) in row.iter().enumerate() {
+                if *val == 0 {
+
+                    // Peaks is a set for each trailhead to keep track of which peaks
+                    // we have visited so far to prevent overcounting.
+                    total_trail_rating += self.find_trails_pt2((i,j));
+                }
+            }
+        }
+
+        total_trail_rating
+
+    }
+
 }
 
 fn main() -> std::io::Result<()> {
@@ -117,13 +159,9 @@ fn main() -> std::io::Result<()> {
 
     let test: TopographicMap = TopographicMap::new(&data);
 
-    // dbg!(&test);
-
-    // dbg!(&test.char_mat[0][1]);
-
     println!("The total trail score is {}", test.part1());
 
-    // 1062: Too high
+    println!("The total trail rating is {}", test.part2());
 
     Ok(())
 }
