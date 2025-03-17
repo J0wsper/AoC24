@@ -151,8 +151,6 @@ impl TopographicMap {
 }
 
 fn main() -> std::io::Result<()> {
-    
-    env::set_var("RUST_BACKTRACE", "1");
 
     let data = fs::read_to_string("day10.txt")
         .expect("Could not read day10.txt.");
